@@ -5,6 +5,7 @@ from celery.result import AsyncResult
 
 from src.schema import UserSchema, WorkflowSchema
 from src.services.firebase_client import add_workflow_to_user_db
+from src.services.workflows import pause_workflow, delete_workflow
 from src.tasks import schedule_task, celery_app
 
 from src.services.auth import get_current_user
@@ -28,7 +29,6 @@ async def create_user(user_details: UserSchema, user: dict[str: Any] = Depends(g
         raise HTTPException(status_code=500, detail=str(e))
    
 
-
 @app.post("/schedule-workflow")
 async def schedule_workflow(workflow: WorkflowSchema, user: dict[str: Any] = Depends(get_current_user)):
     try:
@@ -48,6 +48,33 @@ async def schedule_workflow(workflow: WorkflowSchema, user: dict[str: Any] = Dep
       return {"message": "Workflow scheduled", "workflow": workflow.model_dump(mode="json"), "task_id": ret.id}
     except Exception as e:
       raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/workflows/{workflow_id}/pause")
+async def pause_workflow_endpooint(workflow_id: str, user: dict[str: Any] = Depends(get_current_user)):
+    try:
+      if not user or user.get("uid") is None:
+          raise HTTPException(status_code=401, detail="Unauthorized")
+      user_uid = user.get("uid")
+      print(f"Pausing workflow {workflow_id} for user {user_uid}")
+      pause_workflow(user_uid, workflow_id)
+      return {"message": "Workflow stopped", "workflow_id": workflow_id}
+    except Exception as e:
+      print(str(e))
+      raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.delete("/workflows/{workflow_id}/delete")
+async def delete_workflow_endpoint(workflow_id: str, user: dict[str: Any] = Depends(get_current_user)):
+    try:
+      if not user or user.get("uid") is None:
+          raise HTTPException(status_code=401, detail="Unauthorized")
+      user_uid = user.get("uid")
+      delete_workflow(user_uid, workflow_id)
+      return {"message": "Workflow deleted", "workflow_id": workflow_id}
+    except Exception as e:
+      print(str(e))
+      raise HTTPException(status_code=500, detail=str(e))  
 
 
 @app.get("/health/redis")
