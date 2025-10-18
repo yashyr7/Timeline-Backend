@@ -34,3 +34,6 @@ Thumbs.db
 
 # Redis dumps
 dump.rdb
+
+#firebase-service-account.json
+timeline-backend-8b0a9-firebase-adminsdk-fbsvc-0e1953a39a.json
