@@ -38,20 +38,3 @@ def get_user_ref(user_uid: str):
 def get_workflow_ref(user_uid: str, workflow_id: str):
     return db.collection("users").document(user_uid).collection("workflows").document(workflow_id)
 
-def add_workflow_to_user_db(user_uid: str, workflow_data: dict):
-    workflow_data['created_at'] = firestore.SERVER_TIMESTAMP
-    user_ref = get_user_ref(user_uid)
-    workflows_collection = user_ref.collection("workflows")
-    
-    # Add a new document with a generated ID
-    write_time, workflow_ref = workflows_collection.add(workflow_data)
-
-    workflow_ref.update({"workflow_id": workflow_ref.id})
-
-    print("Added workflow to Firestore")
-
-    user_ref.update({
-        "workflows_created": firestore.Increment(1)
-    })
-
-    return workflow_ref

@@ -31,3 +31,4 @@ class TaskSchema(BaseModel):
   result: Optional[str] = None
   scheduled_run_at: Optional[datetime] = None
   created_at: Optional[datetime] = None
+  completed_at: Optional[datetime] = None

@@ -31,6 +31,7 @@ def schedule_task(self, user_id: str = None, workflow_id: str = None):
 
         # Create a Task entry for the first run
         if workflow.last_result is None:
+            result = result
             task: TaskSchema = TaskSchema(
                 task_id=current_task_id,
                 workflow_id=workflow_id,
@@ -38,7 +39,8 @@ def schedule_task(self, user_id: str = None, workflow_id: str = None):
                 status="COMPLETED",
                 result=result,
                 scheduled_run_at=now_utc,
-                created_at=now_utc
+                created_at=now_utc,
+                completed_at=now_utc
             )
             workflow_ref.collection("tasks").document(task.task_id).set(task.model_dump())
             workflow.next_run_at_utc = now_utc

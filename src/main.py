@@ -4,8 +4,7 @@ import redis
 from celery.result import AsyncResult
 
 from src.schema import UserSchema, WorkflowSchema
-from src.services.firebase_client import add_workflow_to_user_db
-from src.services.workflows import pause_workflow, delete_workflow
+from src.services.workflows import add_workflow, pause_workflow, delete_workflow
 from src.tasks import schedule_task, celery_app
 
 from src.services.auth import get_current_user
@@ -29,8 +28,8 @@ async def create_user(user_details: UserSchema, user: dict[str: Any] = Depends(g
         raise HTTPException(status_code=500, detail=str(e))
    
 
-@app.post("/schedule-workflow")
-async def schedule_workflow(workflow: WorkflowSchema, user: dict[str: Any] = Depends(get_current_user)):
+@app.post("/workflows/add")
+async def add_workflow_endpoint(workflow: WorkflowSchema, user: dict[str: Any] = Depends(get_current_user)):
     try:
       if not user or user.get("uid") is None:
           raise HTTPException(status_code=401, detail="Unauthorized")
@@ -38,7 +37,7 @@ async def schedule_workflow(workflow: WorkflowSchema, user: dict[str: Any] = Dep
           raise HTTPException(status_code=403, detail="Forbidden: The authenticated user does not match the workflow owner.")
       
       print("Adding workflow to user DB")
-      workflow_ref = add_workflow_to_user_db(workflow.owner_id, workflow.model_dump())
+      workflow_ref = add_workflow(workflow.owner_id, workflow.model_dump())
       print(f"Workflow added to db with ID: {workflow_ref.id}")
       
       print(f"Scheduling workflow: {workflow}")
@@ -51,7 +50,7 @@ async def schedule_workflow(workflow: WorkflowSchema, user: dict[str: Any] = Dep
 
 
 @app.post("/workflows/{workflow_id}/pause")
-async def pause_workflow_endpooint(workflow_id: str, user: dict[str: Any] = Depends(get_current_user)):
+async def pause_workflow_endpoint(workflow_id: str, user: dict[str: Any] = Depends(get_current_user)):
     try:
       if not user or user.get("uid") is None:
           raise HTTPException(status_code=401, detail="Unauthorized")
